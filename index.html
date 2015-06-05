@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Tofish : An interactive language interpreter for Arduino Uno">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Tofish</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/tschaer/tofish">View on GitHub</a>
+
+          <h1 id="project_title">Tofish</h1>
+          <h2 id="project_tagline">An interactive language interpreter for Arduino Uno</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/tschaer/tofish/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/tschaer/tofish/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="tobys-own-forth-ish-for-arduino" class="anchor" href="#tobys-own-forth-ish-for-arduino" aria-hidden="true"><span class="octicon octicon-link"></span></a>Toby's Own Forth-ish for Arduino</h1>
+
+<p>An interactive language interpreter for the Arduino Uno. Type programs
+on the command line just like on an 8-bit home computer from the 1980's!</p>
+
+<p>Works with an Uno right out of the box and does not require messing about
+with changing or overwriting bootloaders.</p>
+
+<p>Requires the <code>avra</code> assembler to build it and <code>avrdude</code> to download it (see below).</p>
+
+<p>(c) 2012 Tobias Schaer (tschaer).
+Released under the "MIT Open Source Software License".</p>
+
+<h1>
+<a id="quick-start-guide" class="anchor" href="#quick-start-guide" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quick Start Guide</h1>
+
+<p>First install the avra assembler for your platform. I am using Mac so all the
+instructions are given in that format but it should be easy to convert to what
+you are using.</p>
+
+<p>Build:</p>
+
+<pre><code>$ avra -l tofish.lst tofish.asm
+</code></pre>
+
+<p>Download:</p>
+
+<pre><code>$ avrdude -v -patmega328p -carduino -P/dev/tty.usbmodemfd111 -b115200 -D -Uflash:w:tofish.hex:i
+</code></pre>
+
+<p>Once downloaded, you are ready to try an interactive session using a serial
+terminal program.</p>
+
+<p>The Serial Monitor on the Arduino IDE will work if you set it
+to 19200 baud and "Carriage Return" line endings. To change the settings
+properly you may have to close and open the Serial Monitor window. Another
+option is to use a dedicated serial terminal (like ZTerm for the Mac,
+<a href="http://homepage.mac.com/dalverson/zterm/">http://homepage.mac.com/dalverson/zterm/</a> with "destructive backspace" turned
+on to make the input editing look pretty). </p>
+
+<p>Open your serial terminal and you should get the prompt. Type
+'?' to see the list of builtin commands:</p>
+
+<pre><code>tofish  &gt;-))*&gt;
+
+&gt; ?
+
+emit sEmit .$ . CR space spaces + - negate / inc dec AND OR INV XOR LSL LSR ASR
+ROL ROR dup drop swap over byteswap Rpush Rpop Rpeek R@+ R!+ =0 &lt;0 &gt;0 = &lt; &gt;
+?skip ?true ?end start stake : ; r@ r! c@ c! @ dump mem ? show list
+
+Ok.
+&gt;
+</code></pre>
+
+<p>You're up and running! Let's do the Forth "Hello World" by adding two numbers:</p>
+
+<pre><code>&gt; 1 1 + .
+00001
+Ok.
+&gt;
+</code></pre>
+
+<p>Congrats! Your first tofish program. If you had problems with the above, for
+example you got nothing in the terminal or "unknown word" type error messages,
+check the correct serial port is bring used, the line speed is 19200 8N1 and
+line endings are set for "Carriage Return" (0x0D) ONLY.</p>
+
+<h1>
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h1>
+
+<p>In 1968 Chuck Moore wrote Forth on an IBM 1130. It was a self-hosted programming system that supported multiple simultaneous users, interactivity, its own high-level language and a complete development toolchain, all in a few kilo-words of core.</p>
+
+<p>The 1130 Forth is described in a paper he wrote together with his colleague Geoffrey Leach (Forth: a Language for Interactive Computing, found here: <a href="http://www.forth.cz/Download/Doc/4th_1970.pdf">http://www.forth.cz/Download/Doc/4th_1970.pdf</a>). Tofish is inspired primarily by that paper. Chuck's unpublished book "Programming a Problem-Oriented Language" <a href="http://www.colorforth.com/POL.htm">http://www.colorforth.com/POL.htm</a>) and an assembly listing of FIG-Forth for the 6800 chip from 1979 (<a href="http://www.forth.org/fig-forth/fig-forth_6800.pdf">http://www.forth.org/fig-forth/fig-forth_6800.pdf</a>) also filled in a lot of detail.</p>
+
+<p>Tofish is not Forth. Chuck Moore wrote Forth to serve his needs and to suit his own tastes, and encouraged others to write their own Forths. Which is exactly what I did.</p>
+
+<p>Tofish is a fun experiment in language design. It may mature into a more serious implementation, but with the capabilities it has now, it is easy to quickly write and test programs right on the Arduino.</p>
+
+<h1>
+<a id="objective" class="anchor" href="#objective" aria-hidden="true"><span class="octicon octicon-link"></span></a>Objective</h1>
+
+<p>Tofish is meant to be a language for hardware control. Its design goals are to have a vocabulary well suited to shuffling bits around, and to have a simple, self-hosting implementation. I want to be able to develop code right
+ on the Arduino, without having to use any other tools.</p>
+
+<h1>
+<a id="some-technical-stuff" class="anchor" href="#some-technical-stuff" aria-hidden="true"><span class="octicon octicon-link"></span></a>Some Technical Stuff</h1>
+
+<p>Tofish assembles to a single Intel Hex file that goes into the first few kilowords of FLASH. It uses the existing bootloader and does not affect it in any way: in other words, a "stock" Arduino will remain a "stock" Arduino even if you install tofish on it, and you can go back to downloading sketches from the Arduino IDE once you get tired of tofish.</p>
+
+<p>Tofish stores all program code you type in RAM. This means there is a relatively small upper limit (about 1600 bytes) on the size of your Tofish programs. There are commands to LIST the code and to SHOW its contents in human and machine-readable format, so that you can capture this output in your terminal and later "download" them by copying and pasting back into to the terminal window. The source code format is such that everything is 100% runnable from the command line.</p>
+
+<p>Tofish is fully interpreted. This means it stores program code as strings in RAM, and has to re-interpret this code each time you run it.</p>
+
+<p>Tofish doesn't have a very good math function implementation. The divide only supports 16-by-8 bit division, and there is no multiply. Numbers canget bigger than 16 bits very quickly when multiplying and I haven't spent any time on figuring out a convention for dealing with numbers that stretch across more than one stack element.</p>
+
+<h1>
+<a id="language-crash-course" class="anchor" href="#language-crash-course" aria-hidden="true"><span class="octicon octicon-link"></span></a>Language Crash Course</h1>
+
+<p>The command selection is somewhat esoteric and sometimes only distantly related to Forth. I prefer to call them commands instead of words because they are permanent and cannot be redefined. The FLASH dictionary is always searched first.</p>
+
+<p>Commands work in the classic, confusing Forth style: some consume arguments to the left (for example, arithmetic and logic commands), some to the right (definition and status words), and some consume none at all. There is of
+course no way of knowing any of this just by looking.</p>
+
+<p>Numbers are restricted to signed 16-bit integers. They are by default in base-10, but with use of a $ they can both be entered and displayed in base-16:</p>
+
+<pre><code>&gt; $F $12 + .$
+0021
+Ok.
+&gt; $FF 1 + .
+00256
+Ok.
+&gt;
+</code></pre>
+
+<p>Neither <code>.</code> nor <code>.$</code> has leading-zero suppression. This may get added with a global switch at some point.</p>
+
+<h1>
+<a id="language-keywords-by-function" class="anchor" href="#language-keywords-by-function" aria-hidden="true"><span class="octicon octicon-link"></span></a>Language Keywords By Function</h1>
+
+<p>Console:</p>
+
+<pre><code>emit    : print the top stack element as an ASCII char, eg '$41 emit' prints 'A'
+sEmit   : print a string stored in FLASH given its address on the stack
+.$      : print top stack element in 16-bit hexadecimal format
+.       : print the top stack element in 16-bit decimal format
+CR      : print a Carriage Return
+space   : print a space
+spaces  : print as many spaces as the top stack element, eg '5 spaces'
+</code></pre>
+
+<p>Arithmetic:</p>
+
+<pre><code>+       : signed 16-bit add of top two stack elements
+-       : signed 16-bit subtraction of top two stack elements
+negate  : flip the sign on the top stack element
+/       : signed 16-bit integer division. No remainder is generated
+inc     : increment top stack element
+dec     : decrement top stack element
+</code></pre>
+
+<p>Bit manipulation:</p>
+
+<pre><code>AND     : bitwise AND of top two stack elements
+OR      : bitwise OR of top two stack elements
+INV     : bitwise NOT of top stack element. Note: do not use for truth values
+XOR     : bitwise XOR of top two stack elements
+LSL     : bitwise left shift of top stack element. Shifted bits are lost
+LSR     : bitwise right shift of top stack element. Shifted bits are lost
+ASR     : sign-preserving right shift of top stack element
+ROL     : bitwise rotate left of top stack element
+ROR     : bitwise rotate right of top stack element
+</code></pre>
+
+<p>Stack operators:</p>
+
+<pre><code>dup     : clone the top stack element
+drop    : drop the top stack element
+swap    : swap the top two stack elements
+over    : copy the second stack element to the top
+byteswap: change the endianness of the top stack element
+</code></pre>
+
+<p>Return stack operators:</p>
+
+<pre><code>Rpush   : move top of data stack onto the return stack
+Rpop    : move top of return stack to data stack
+Rpeek   : copy top of return stack to data stack
+R@+     : use return stack as post-incrementing index register for memory reads
+R!+     : use return stack as post-incrementing index register for memory write
+</code></pre>
+
+<p>Determination operators:</p>
+
+<pre><code>=0      : if top stack element is zero, replace it with a logical TRUE (0x01)
+&lt;0      : if top stack element is negative, replace it with a logical TRUE
+&gt;0      : if top stack element is positive, replace it with a logical TRUE
+</code></pre>
+
+<p>Comparison operators:</p>
+
+<pre><code>=       : if top two stack elements are equal, replace them with a logical TRUE
+&lt;       : if the second stack element is less than the first, replace with TRUE
+&gt;       : if the second stack element is greater that the first, replace w TRUE
+</code></pre>
+
+<p>For the above six commands, a logical FALSE (0x00) is placed on the stack if the condition is not met. In all cases the operators consume their arguments.</p>
+
+<p>Conditional constructs:</p>
+
+<pre><code>?skip   : if top stack element is a logical TRUE, skip the next word
+?true   : if top stack element is true, execute the words following this one,
+        : else skip ahead until ?end is found
+?end    : terminator for ?true
+</code></pre>
+
+<p>Looping constructs:</p>
+
+<pre><code>start   : start the current definition again
+stake   : move the start of the definition to the first word after this one
+</code></pre>
+
+<p>Definition:</p>
+
+<pre><code>:       : start the definition of a new word. The word right after it is the
+        : name of the definition. Definitions are terminated not by ; below
+        : but by a newline character.
+;       : same as RETURN in other languages, and can be used anywhere in a
+        : definition
+</code></pre>
+
+<p>Memory access:</p>
+
+<pre><code>r@      : fetch a 16-bit word from RAM from the address on the stack
+r!      : store the top of stack to the address in the second stack element
+c@      : like r@ but fetch only the lower 8 bits from RAM
+c!      : like r! but store only the lower 8 bits to RAM
+@       : fetch a 16-bit word from FLASH from the address on the stack
+</code></pre>
+
+<p>Very useful:</p>
+
+<pre><code>dump    : dump 256 bytes of FLASH starting at the address on top of stack
+        : eg '$200 dump'
+mem     : dump 256 bytes of RAM starting at the address on top of stack
+        : eg '$100 mem'
+?       : show all language keywords
+list    : list all user-defined definitions
+show    : print the definition of the word right after it
+        : eg 'show mydefinition'
+</code></pre>
+
+<h1>
+<a id="some-examples" class="anchor" href="#some-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Some Examples</h1>
+
+<p>A simple definition session:</p>
+
+<pre><code>&gt; : plus2 2 + ;
+
+Ok.
+&gt; 2 plus2 .
+00004
+Ok.
+&gt; list
+plus2
+
+Ok.
+&gt; show plus2
+: plus2 2 + ;
+
+Ok.
+&gt;
+</code></pre>
+
+<p>Let's turn an LED on and off. We have access to all RAM including I/O, we just have to call it by its raw hex address. Set the Data Direction Register to all outputs:</p>
+
+<pre><code>&gt; $24 $FF r!
+</code></pre>
+
+<p>Then we'll get the current status onto the stack:</p>
+
+<pre><code>&gt; $25 c@ 
+</code></pre>
+
+<p>And turn on Bit 5:</p>
+
+<pre><code>&gt; $20 OR
+</code></pre>
+
+<p>And store it back:</p>
+
+<pre><code>&gt; $25 swap c!
+</code></pre>
+
+<p>You can at any time see what's on the stack by making a copy of it and printing
+it out, like so:</p>
+
+<pre><code>&gt; dup .$
+</code></pre>
+
+<p>Combining all the commands together into one line:</p>
+
+<pre><code>&gt; $25 dup c@ $20 OR c!
+</code></pre>
+
+<p>We can now make that into a definition:</p>
+
+<pre><code>&gt; : ledOn $25 dup c@ $20 OR c! ;
+
+Ok.
+&gt;
+</code></pre>
+
+<p>And we can do the same to turn it off:</p>
+
+<pre><code>&gt; : ledOff $25 dup c@ $DF AND c! ;
+
+Ok.
+&gt;
+</code></pre>
+
+<p>To make the LED blink we need to run these two commands in a loop, but with some kind of delay in between. So we define an empty loop:</p>
+
+<pre><code>&gt; : delay dup =0 ?true drop ; ?end dec start
+
+Ok.
+&gt;
+</code></pre>
+
+<p>Then we can put it all together in a word called blink:</p>
+
+<pre><code>&gt; : blink ledOn 200 delay ledOff 200 delay start ;
+</code></pre>
+
+<p>There is no "break" command. To return to the prompt you have to reset the Arduino, which unfortunately destroys your code!</p>
+
+<h1>
+<a id="more-examples" class="anchor" href="#more-examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>More Examples</h1>
+
+<p>Dump some memory to the screen:</p>
+
+<pre><code> &gt; : memline dup .$ space Rpush $8 stake R@+ byteswap .$ space dec dup =0 ?true
+     CR drop Rpop ; ?end start
+
+ Ok.
+ &gt; $200 memline
+ 0200 4C0C 007B 7B5F FA73 EFA4 6EC6 BDFA CD9F
+
+ Ok.
+</code></pre>
+
+<p>Compare this to the real memory dump routine:</p>
+
+<pre><code> &gt; $200 mem
+ 0200 4C 0C 00 7B 7B 5F FA 73 EF A4 6E C6 BD FA CD 9F  L..{{_.s..n.....
+ 0210 36 3B EB F6 CD BD E7 7E 9E 07 B6 E6 FA 3B 02 00  6;.....~.....;..
+ 0220 3F 1F B3 FF EC 6C E1 CD 7B FF 72 F7 E8 FF E3 43  ?....l..{.r....C
+ 0230 D3 57 D8 C1 FD 9E 5D 37 BF 37 B6 72 DB C3 FD AF  .W....]7.7.r....
+ 0240 D7 F0 7B DC 4D AB C5 D1 CC 07 33 7F E6 FE AB 3D  ..{.M.....3...=
+ 0250 15 7E 7A F5 E7 6B 0F 93 76 BF EA 55 77 7F 4D EE  .~z..k..v..UwM.
+ 0260 D9 84 47 FB AD FD 34 EB BC 8C 39 F2 B4 7D FB DF  ..G...4...9..}..
+ 0270 C5 EB 7D 5F 3D FC 6F 8F F9 5B 5D D5 DE CC 2F 9A  ..}_=.o..[].../.
+ 0280 E7 C5 FF C4 F7 7D 77 D3 E7 FF FF A3 A7 AF CD 5E  .....}w........^
+ 0290 FE B9 EF C1 E7 8E B9 4E 56 79 FF 9F EE B3 5E EE  .......NVy....^.
+ 02A0 22 73 71 F1 C8 FD C1 94 7D FD CB E2 7B FD 7D 77  "sq.....}...{.}w
+ 02B0 DF FB EE FE A5 AF D6 44 BE 59 45 CB 76 FF EA F6  .......D.YE.v...
+ 02C0 D7 9B F5 3A 4D E3 E3 4F DE D3 97 CA BE 8F D5 EB  ...:M..O........
+ 02D0 6F FF E6 FA DF DB AB 2C 67 9D 67 47 FF 67 BB F7  o......,g.gG.g..
+ 02E0 2B E9 4A 4E F5 79 6B D2 AB 69 BB AC AE D5 C5 BA  +.JN.yk..i......
+ 02F0 47 6F 3A F8 B6 2D 75 D8 08 68 C6 AB E6 7F 29 B8  Go:..-u..h...).
+
+ Ok.
+ &gt;
+</code></pre>
+
+<p>The same goes for FLASH:</p>
+
+<pre><code> &gt; $00 dump
+ 0000 0C94 3400 FFFF FFFF FFFF FFFF FFFF FFFF  ..4.............
+ 0008 FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF  ................
+ 0010 FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF  ................
+ 0018 FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF  ................
+ 0020 FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF  ................
+ 0028 FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF  ................
+ 0030 FFFF FFFF FFFF FFFF 10E0 1093 C500 17E6  ................
+ 0038 1093 C400 18E1 1093 C100 16E0 1093 C200  ................
+ 0040 18E0 1093 5E00 1FEF 1093 5D00 D2E0 C0E2  ....^.....].....
+ 0048 D093 0301 C093 0201 10E0 00E0 1093 0501  ................
+ 0050 0093 0401 11E0 06E0 5801 11E0 1093 0101  ........X.......
+ 0058 1093 0001 F1E0 E6E9 0C94 6400 0A93 1A93  ..........d.....
+ 0060 0E94 7400 0E94 A000 6F01 1091 0101 1123  ..t.....o......#
+ 0068 29F0 0E94 8705 A591 B491 04C0 0E94 8B05  )...............
+ 0070 A191 B081 FD01 0994 FC01 D501 1091 0001  ................
+ 0078 1123 69F0 1591 1032 E9F3 1030 39F0 1D93  .#i....2...09...
+
+ Ok.
+ &gt;
+</code></pre>
+
+<p>All other questions can be answered by writing to me (toby dot schaer at gmail dot com) or looking in the source code. Good luck!</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Tofish maintained by <a href="https://github.com/tschaer">tschaer</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
